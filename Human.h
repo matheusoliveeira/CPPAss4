@@ -7,10 +7,16 @@ class Human : public Organism {
 public:
     Human();
     Human(City* city, int width, int height);
-    virtual ~Human();
+    ~Human();
 
-    void move();
+    void move() override;
     void recruit();
+
+    char getSymbol() const override;
+
+private:
+    enum { WEST, NORTH, EAST, SOUTH, NUM_DIRECTIONS };
+    int turnsSurvived;
 };
 
 #endif

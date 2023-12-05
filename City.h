@@ -26,8 +26,13 @@ public:
     bool hasDiversity();
     void reset();
     void countOrganisms();
+    void resetMoved();
     int countType(char organismType);
     int getGeneration();
+
+    void incrementGeneration() {
+        generation++;
+    }
 
     friend ostream& operator<<(ostream& output, City& city);
 };

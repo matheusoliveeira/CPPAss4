@@ -17,17 +17,23 @@ void Organism::setPosition(int x, int y) {
 void Organism::endTurn() {
     moved = true;
 }
-
 bool Organism::isTurn() {
     return !moved;
 }
 
+bool Organism::hasMoved() const {
+    return moved;
+}
+
+void Organism::resetMoved() {
+    moved = false;
+}
+
 std::ostream& operator<<(std::ostream& output, Organism* organism) {
     if (organism != nullptr) {
-        // Example: Print 'H' for Humans and 'Z' for Zombies
         output << (dynamic_cast<Human*>(organism) != nullptr ? 'H' : 'Z');
     } else {
-        output << SPACE_CH;  // Print empty space
+        output << SPACE_CH;
     }
     return output;
 }

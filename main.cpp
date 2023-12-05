@@ -21,19 +21,16 @@ int main() {
     chrono::milliseconds interval = chrono::duration_cast<chrono::milliseconds>(chrono::duration<double>(PAUSE_SECONDS));
 
     while (city->hasDiversity() && city->getGeneration() < ITERATIONS) {
-        cout << "inside loop" << endl;
         this_thread::sleep_for(interval);
         ClearScreen();
         city->move();
-        city->reset();
+        city->resetMoved();
         city->countOrganisms();
         cout << *city;
-        cout << "GENERATION " << city->getGeneration() << endl;
+        cout << "GENERATION: " << city->getGeneration() << endl;
         cout << "HUMANS: " << city->countType(HUMAN_CH) << endl;
         cout << "ZOMBIES: " << city->countType(ZOMBIE_CH) << endl;
 
-        // Debug statement
-        cout << "Debug: End of loop iteration" << endl;
     }
 
     delete city; // Don't forget to free the memory
