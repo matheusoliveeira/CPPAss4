@@ -2,39 +2,32 @@
 #define _CITY_H
 
 #include <iostream>
+#include "GameSpecs.h"
+#include "Organism.h"
 
-using namespace std;
-
-class Organism;  // Forward declaration
-
-const int GRID_WIDTH = 20;
-const int GRID_HEIGHT = 20;
+class Organism;
 
 class City {
-protected:
-    Organism* grid[GRID_HEIGHT][GRID_WIDTH];
-    int generation;
+
+    friend class Organism;
+    friend class Human;
+    friend class Zombie;
+
+private:
+    Organism *grid[GRID_SIZE][GRID_SIZE];
+    int timeStepCount;
+    int generateRandomNumber(int startRange, int endRange) const;
 
 public:
     City();
-    virtual ~City();
-
-    Organism* getOrganism(int x, int y);
-    void setOrganism(Organism* organism, int x, int y);
-
-    void move();
+    void startGame();
+    void takeTimeStep();
+//    void printCity() const;
     bool hasDiversity();
-    void reset();
-    void countOrganisms();
-    void resetMoved();
-    int countType(char organismType);
     int getGeneration();
+    int countType(char organismType);
 
-    void incrementGeneration() {
-        generation++;
-    }
-
-    friend ostream& operator<<(ostream& output, City& city);
+    friend std::ostream& operator<<(std::ostream& output, const City& city);
 };
 
 #endif

@@ -3,37 +3,62 @@
 #include "Human.h"
 #include "GameSpecs.h"
 
-Organism::Organism() : x(0), y(0), width(0), height(0), moved(false), city(nullptr) {}
+std::vector<int> Organism::getMovesToEmptyCells(int x, int y) const {
+    std::vector<int> movesToEmptyCells;
+    int tempX, tempY;
+    for (int move = LEFT; move <= UP; move++){
+        tempX = x;
+        tempY = y;
+        getCoordinate(tempX, tempY, move);
+        if (!isValidCoordinate(tempX, tempY)) continue;
+        if (city->grid[tempX][tempY] == nullptr)
+            movesToEmptyCells.push_back(move);
+    }
+    return movesToEmptyCells;
+}
 
-Organism::Organism(City* city, int width, int height) : x(0), y(0), width(width), height(height), moved(false), city(city) {}
+bool Organism::isValidCoordinate(int x, int y) const {
+    if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE)
+        return false;
+    return true;
+}
 
-Organism::~Organism() {}
+void Organism::getCoordinate(int& x, int& y, int move) const {
+    if (move == LEFT) x--;
+    if (move == RIGHT) x++;
+    if (move == DOWN) y--;
+    if (move == UP) y++;
+}
 
-void Organism::setPosition(int x, int y) {
+Organism::Organism(City* city, int x, int y){
+    this->city = city;
     this->x = x;
     this->y = y;
+    timeTillBreed = 0;
+    timeStepCount = city->timeStepCount;
 }
 
-void Organism::endTurn() {
-    moved = true;
-}
-bool Organism::isTurn() {
-    return !moved;
-}
+void Organism::move() {
+    if (timeStepCount == city->timeStepCount) return;
+    timeStepCount++;
+    timeTillBreed--;
 
-bool Organism::hasMoved() const {
-    return moved;
-}
-
-void Organism::resetMoved() {
-    moved = false;
-}
-
-std::ostream& operator<<(std::ostream& output, Organism* organism) {
-    if (organism != nullptr) {
-        output << (dynamic_cast<Human*>(organism) != nullptr ? 'H' : 'Z');
-    } else {
-        output << SPACE_CH;
+    // Generate a random move in the allowed range (up, down, left, or right)
+    int randomMove = city->generateRandomNumber(LEFT, DOWN);
+    while (randomMove % 2 == 0) {
+        // If the randomly generated move is diagonal, regenerate until it's not
+        randomMove = city->generateRandomNumber(LEFT, DOWN);
     }
-    return output;
+
+    int newX = x;
+    int newY = y;
+    getCoordinate(newX, newY, randomMove);
+
+    if (isValidCoordinate(newX, newY) && city->grid[newX][newY] == nullptr) {
+        // If the new position is valid and empty, move the organism
+        city->grid[x][y] = nullptr;
+        city->grid[newX][newY] = this;
+        x = newX;
+        y = newY;
+    }
 }

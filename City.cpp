@@ -8,94 +8,94 @@
 #include "Human.h"
 #include "Zombie.h"
 
+using namespace std;
 
-City::City() : generation(0) {
-    for (int i = 0; i < GRID_HEIGHT; ++i) {
-        for (int j = 0; j < GRID_WIDTH; ++j) {
-            grid[i][j] = nullptr;  // Initialize each cell to nullptr
-        }
+int City::generateRandomNumber(int startRange, int endRange) const {
+    return rand() % (endRange - startRange + 1) + startRange;
+}
+
+City::City(){
+    srand(time(NULL));
+    timeStepCount = 0;
+    for (int x = 0; x < GRID_SIZE; x++)
+        for (int y = 0; y < GRID_SIZE; y++)
+            grid[x][y] = nullptr;
+
+    int x,y;
+    int zombieCount = 0;
+    int humanCount = 0;
+
+    // add zombies
+    while (zombieCount < ZOMBIE_START_COUNT){
+        x = generateRandomNumber(0, GRID_SIZE - 1);
+        y = generateRandomNumber(0, GRID_SIZE - 1);
+        if (grid[x][y] != nullptr) continue;
+        grid[x][y] = new Zombie(this, x, y);
+        zombieCount++;
     }
-    // Initialize random seed
-    srand(static_cast<unsigned int>(time(nullptr)));
 
-    // Create and place initial humans
-    for (int i = 0; i < HUMAN_STARTCOUNT; ++i) {
-        int x = rand() % (GRID_WIDTH / 2);  // Random x coordinate within half of the grid width
-        int y = rand() % (GRID_HEIGHT / 2); // Random y coordinate within half of the grid height
-
-        // Distribute humans in each quadrant
-        x += (i % 2) * (GRID_WIDTH / 2);    // Shift x coordinate for alternating columns
-        y += (i / (HUMAN_STARTCOUNT / 2)) * (GRID_HEIGHT / 2);   // Shift y coordinate for each quadrant
-
-        // Check if the chosen cell is empty before placing a human
-        if (grid[x][y] == nullptr) {
-            grid[x][y] = new Human(this, x, y);
-        } else {
-            --i;
-        }
-    }
-
-    // Create and place initial zombies
-    for (int i = 0; i < ZOMBIE_STARTCOUNT; ++i) {
-        int x = rand() % (GRID_WIDTH / 2);  // Random x coordinate within half of the grid width
-        int y = rand() % (GRID_HEIGHT / 2); // Random y coordinate within half of the grid height
-
-        // Distribute zombies in each quadrant
-        x += (i % 2) * (GRID_WIDTH / 2);    // Shift x coordinate for alternating quadrants
-        y += (i / (ZOMBIE_STARTCOUNT / 2)) * (GRID_HEIGHT / 2); // Shift y coordinate for each quadrant
-
-        // Check if the chosen cell is empty before placing a zombie
-        if (grid[x][y] == nullptr) {
-            grid[x][y] = new Zombie(this, x, y);
-        } else {
-            --i;
-        }
+    // add humans
+    while (humanCount < HUMAN_START_COUNT){
+        x = generateRandomNumber(0, GRID_SIZE - 1);
+        y = generateRandomNumber(0, GRID_SIZE - 1);
+        if (grid[x][y] != nullptr) continue;
+        grid[x][y] = new Human(this, x, y);
+        humanCount++;
     }
 }
 
+void City::takeTimeStep(){
+    timeStepCount++;
 
-City::~City() {
-    // Clean up memory if needed
-}
+    // move zombies
+    for (int x = 0; x < GRID_SIZE; x++){
+        for (int y = 0; y < GRID_SIZE; y++){
+            if (grid[x][y] == nullptr) continue;
+            if (grid[x][y]->getType() == ZOMBIE_CH)
+                grid[x][y]->move();
+        }
+    }
 
-Organism* City::getOrganism(int x, int y) {
-    // Implement logic to get organism at a specific position
-    return grid[y][x];
-}
+    // move humans
+    for (int x = 0; x < GRID_SIZE; x++){
+        for (int y = 0; y < GRID_SIZE; y++){
+            if (grid[x][y] == nullptr) continue;
+            if (grid[x][y]->getType() == HUMAN_CH)
+                grid[x][y]->move();
+        }
+    }
 
-void City::setOrganism(Organism* organism, int x, int y) {
-    // Implement logic to set organism at a specific position
-    grid[y][x] = organism;
-}
+    for (int x = 0; x < GRID_SIZE; x++){
+        for (int y = 0; y < GRID_SIZE; y++){
+            if (grid[x][y] == nullptr) continue;
+            grid[x][y]->breed();
+        }
+    }
 
-void City::move() {
-    for (int i = 0; i < GRID_HEIGHT; ++i) {
-        for (int j = 0; j < GRID_WIDTH; ++j) {
-            Organism* organism = grid[i][j];
-            if (organism != nullptr && organism->isTurn()) {
-                organism->move();
+    for (int x = 0; x < GRID_SIZE; x++){
+        for (int y = 0; y < GRID_SIZE; y++){
+            if (grid[x][y] == nullptr) continue;
+            if (grid[x][y]->starves()){
+                delete grid[x][y];
+                grid[x][y] = nullptr;
             }
         }
     }
-
-    incrementGeneration();
 }
 
 bool City::hasDiversity() {
     bool hasHumans = false;
     bool hasZombies = false;
 
-    // Iterate through the grid to check for humans and zombies
-    for (int i = 0; i < GRID_HEIGHT; ++i) {
-        for (int j = 0; j < GRID_WIDTH; ++j) {
-            Organism* organism = grid[i][j];
-            if (organism != nullptr) {
+    for (int i = 0; i < GRID_SIZE; ++i) {
+        for (int j = 0; j < GRID_SIZE; ++j) {
+            if (grid[i][j] != nullptr) {
                 // Check if the organism is a Human
-                if (dynamic_cast<Human*>(organism) != nullptr) {
+                if (grid[i][j]->getType() == HUMAN_CH) {
                     hasHumans = true;
                 }
                     // Check if the organism is a Zombie
-                else if (dynamic_cast<Zombie*>(organism) != nullptr) {
+                else if (grid[i][j]->getType() == ZOMBIE_CH) {
                     hasZombies = true;
                 }
             }
@@ -106,49 +106,17 @@ bool City::hasDiversity() {
     return hasHumans && hasZombies;
 }
 
-//void City::reset() {
-//    for (int i = 0; i < GRID_HEIGHT; ++i) {
-//        for (int j = 0; j < GRID_WIDTH; ++j) {
-//            Organism* organism = grid[i][j];
-//            if (organism != nullptr) {
-//                organism->endTurn();  // Reset the moved flag for each organism
-//            }
-//        }
-//    }
-//}
-
-void City::resetMoved() {
-    for (int i = 0; i < GRID_HEIGHT; ++i) {
-        for (int j = 0; j < GRID_WIDTH; ++j) {
-            Organism* organism = grid[i][j];
-            if (organism != nullptr) {
-                organism->resetMoved();  // Call a function to reset hasMoved flag
-            }
-        }
-    }
-}
-
-void City::countOrganisms() {
-    int totalOrganisms = 0;
-
-    // Iterate through the grid to count all organisms
-    for (int i = 0; i < GRID_HEIGHT; ++i) {
-        for (int j = 0; j < GRID_WIDTH; ++j) {
-            if (grid[i][j] != nullptr) {
-                totalOrganisms++;
-            }
-        }
-    }
+int City::getGeneration() {
+    return timeStepCount;
 }
 
 int City::countType(char organismType) {
     int count = 0;
 
     // Iterate through the grid to count organisms of a specific type
-    for (int i = 0; i < GRID_HEIGHT; ++i) {
-        for (int j = 0; j < GRID_WIDTH; ++j) {
-            Organism* organism = grid[i][j];
-            if (organism != nullptr && organism->getSymbol() == organismType) {
+    for (int i = 0; i < GRID_SIZE; ++i) {
+        for (int j = 0; j < GRID_SIZE; ++j) {
+            if (grid[i][j] != nullptr && grid[i][j]->getType() == organismType) {
                 count++;
             }
         }
@@ -157,30 +125,25 @@ int City::countType(char organismType) {
     return count;
 }
 
-int City::getGeneration() {
-    return generation;
-}
-
-std::ostream& operator<<(std::ostream& output, City& city) {
-    for (int y = 0; y < GRID_HEIGHT; ++y) {
-        for (int x = 0; x < GRID_WIDTH; ++x) {
-            Organism* organism = city.grid[y][x];
-            if (organism != nullptr) {
-                // Check the type of organism and print the appropriate symbol with color
-                if (dynamic_cast<Human*>(organism) != nullptr) {
-                    output << "\033[38;5;" << HUMAN_COLOR << "m";  // Set text color for humans
-                    output << 'H' << "  ";  // 'H' for Human with space
-                } else if (dynamic_cast<Zombie*>(organism) != nullptr) {
-                    output << "\033[38;5;" << ZOMBIE_COLOR << "m";  // Set text color for zombies
-                    output << 'Z' << "  ";  // 'Z' for Zombie with space
+std::ostream& operator<<(std::ostream& output, const City& city) {
+    for (int x = 0; x < GRID_SIZE; x++){
+        for (int y = 0; y < GRID_SIZE; y++){
+            if (city.grid[x][y] != nullptr) {
+                if (city.grid[x][y]->getType() == ZOMBIE_CH) {
+                    output << "\033[38;5;" << ZOMBIE_COLOR << "m";
+                    output << 'Z' << "  ";
+                } else if (city.grid[x][y]->getType() == HUMAN_CH) {
+                    output << "\033[38;5;" << HUMAN_COLOR << "m";
+                    output << 'H' << "  ";
                 }
-                output << "\033[0m";  // Reset text color to default
+                output << "\033[0m"; // Reset text color to default
             } else {
-                output << SPACE_CH << "  ";  // Print empty space with space
+                output << SPACE_CH << "  ";
             }
         }
-        output << std::endl;  // Move to the next line after each row
+        output << std::endl;
     }
+
     return output;
 }
 

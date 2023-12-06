@@ -2,21 +2,16 @@
 #define _Human_H
 
 #include "Organism.h"
+#include "City.h"
 
-class Human : public Organism {
+class Human: public Organism {
+
 public:
-    Human();
-    Human(City* city, int width, int height);
-    ~Human();
+    Human(): Organism(){}
+    Human(City* city, int x, int y);
+    void breed();
+    int getType(){ return HUMAN_CH; }
 
-    void move() override;
-    void recruit();
-
-    char getSymbol() const override;
-
-private:
-    enum { WEST, NORTH, EAST, SOUTH, NUM_DIRECTIONS };
-    int turnsSurvived;
 };
 
 #endif

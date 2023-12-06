@@ -2,12 +2,31 @@
 #define _GAMESPECS_H
 
 
-const int GRIDSIZE = 20; // size of the square grid
-const int HUMAN_STARTCOUNT = 4; // inital Humans    100
-const int ZOMBIE_STARTCOUNT = 4; //initial Zombie count 5
-const int HUMAN_BREED = 3; // steps until an Human breeds
-const int ZOMBIE_BREED = 8; // steps until an Zombie breeds
-const int ZOMBIE_STARVE = 3; // steps until a Zombie starves and converts back
+const int GRID_SIZE = 20;
+const int ZOMBIE_START_COUNT = 5;
+const int HUMAN_START_COUNT = 100;
+const int ZOMBIE_BREED = 8;
+const int HUMAN_BREED = 3;
+const int ZOMBIE_STARVE = 3;
+
+
+enum Direction {
+    LEFT = 1,
+    RIGHT,
+    DOWN,
+    UP,
+    UP_LEFT,
+    UP_RIGHT,
+    DOWN_LEFT,
+    DOWN_RIGHT
+};
+
+
+
+
+
+
+
 const char HUMAN_CH = 72;//72 "H"// ascii for Human   was 111 why?
 const char SPACE_CH = 45; // "-" ascii dash for empty elements
 const char ZOMBIE_CH = 90;//90 "Z"// ascii for zombie
@@ -26,7 +45,7 @@ const int TURNS_TO_SURVIVE = 3;
 //7  = white regular		//16+ = solid blocks
 //8  = white pale
 
-const int HUMAN_COLOR = 3; // turquoise
-const int ZOMBIE_COLOR = 14; // bright yellow
+const int HUMAN_COLOR = 14; // turquoise
+const int ZOMBIE_COLOR = 3; // bright yellow
 
 #endif
