@@ -2,7 +2,6 @@
 #include "City.h"
 #include "GameSpecs.h"
 #include "Human.h"
-#include <random>
 #include <vector>
 
 using namespace std;
@@ -31,9 +30,9 @@ Zombie::Zombie(City* city, int x, int y): Organism(city, x, y){
 void Zombie::breed(){
     timeTillBreed--;
     if (timeTillBreed > 0) return;
-    vector<int> validMoves = getMovesToEmptyCells(x, y);
-    if (validMoves.size() == 0) return;
-    int randomMove = validMoves[city->generateRandomNumber(0, validMoves.size() - 1)];
+    vector<int> humanToBreed = getMovesToHumans(x, y);
+    if (humanToBreed.size() == 0) return; // no humans around
+    int randomMove = humanToBreed[city->generateRandomNumber(0, humanToBreed.size() - 1)];
     int newX = x;
     int newY = y;
     getCoordinate(newX, newY, randomMove);
@@ -42,22 +41,43 @@ void Zombie::breed(){
 }
 
 void Zombie::move(){
+    if (hasMoved()) return;
     if (timeStepCount == city->timeStepCount) return;
     vector<int> movesToHumans = getMovesToHumans(x, y);
-    if (movesToHumans.size() == 0){
-        Organism::move();
+    if (movesToHumans.size() == 0){ // No humans, move to random position
         timeTillStarve--;
-        return;
+
+        int randomMove = city->generateRandomNumber(LEFT, DOWN_RIGHT);
+        int newX = x;
+        int newY = y;
+        getCoordinate(newX, newY, randomMove);
+
+        if (isValidCoordinate(newX, newY) && city->grid[newX][newY] == nullptr) {
+            // If the new position is valid and empty, move the organism
+            city->grid[x][y] = nullptr;
+            city->grid[newX][newY] = this;
+            x = newX;
+            y = newY;
+        }
+
+    } else {
+        timeStepCount++;
+        timeTillStarve = ZOMBIE_STARVE; // has human to eat, reset starve
+        int randomMove = movesToHumans[city->generateRandomNumber(0, movesToHumans.size() - 1)];
+        int humanX = x;
+        int humanY = y;
+        getCoordinate(humanX, humanY, randomMove);
+        delete city->grid[humanX][humanY];
+        city->grid[humanX][humanY] = this;
+        city->grid[x][y] = nullptr;
+        x = humanX;
+        y = humanY;
     }
-    timeStepCount++;
-    timeTillStarve = ZOMBIE_STARVE;
-    int randomMove = movesToHumans[city->generateRandomNumber(0, movesToHumans.size() - 1)];
-    int antX = x;
-    int antY = y;
-    getCoordinate(antX, antY, randomMove);
-    delete city->grid[antX][antY];
-    city->grid[antX][antY] = this;
-    city->grid[x][y] = nullptr;
-    x = antX;
-    y = antY;
 }
+
+void Zombie::turn() {
+    move();
+    breed();
+    setMoved(true);
+}
+

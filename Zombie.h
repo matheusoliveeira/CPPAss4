@@ -20,8 +20,9 @@ public:
     Zombie(City* city, int x, int y);
     void breed();
     void move();
-    int getType(){ return ZOMBIE_CH; }
-    bool starves(){ return timeTillStarve == 0; }
+    void turn() override;
+    int getType() override { return ZOMBIE_CH; }
+    bool starves() override { return timeTillStarve == 0; }
 };
 
 #endif

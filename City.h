@@ -20,10 +20,7 @@ private:
 
 public:
     City();
-    void startGame();
     void takeTimeStep();
-//    void printCity() const;
-    bool hasDiversity();
     int getGeneration();
     int countType(char organismType);
 

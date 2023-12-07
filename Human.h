@@ -9,8 +9,10 @@ class Human: public Organism {
 public:
     Human(): Organism(){}
     Human(City* city, int x, int y);
-    void breed();
-    int getType(){ return HUMAN_CH; }
+    void recruit();
+    void move();
+    int getType() override { return HUMAN_CH; }
+    void turn() override;
 
 };
 

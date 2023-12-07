@@ -21,91 +21,70 @@ City::City(){
         for (int y = 0; y < GRID_SIZE; y++)
             grid[x][y] = nullptr;
 
-    int x,y;
-    int zombieCount = 0;
-    int humanCount = 0;
+    // Create and place initial humans
+    for (int i = 0; i < HUMAN_START_COUNT; ++i) {
+        int x = rand() % (GRID_SIZE / 2);  // Random x coordinate within half of the grid width
+        int y = rand() % (GRID_SIZE / 2); // Random y coordinate within half of the grid height
 
-    // add zombies
-    while (zombieCount < ZOMBIE_START_COUNT){
-        x = generateRandomNumber(0, GRID_SIZE - 1);
-        y = generateRandomNumber(0, GRID_SIZE - 1);
-        if (grid[x][y] != nullptr) continue;
-        grid[x][y] = new Zombie(this, x, y);
-        zombieCount++;
+        // Distribute humans in each quadrant
+        x += (i % 2) * (GRID_SIZE / 2);    // Shift x coordinate for alternating columns
+        y += (i / (HUMAN_START_COUNT / 2)) * (GRID_SIZE / 2);   // Shift y coordinate for each quadrant
+
+        // Check if the chosen cell is empty before placing a human
+        if (grid[x][y] == nullptr) {
+            grid[x][y] = new Human(this, x, y);
+        } else {
+            --i;
+        }
     }
 
-    // add humans
-    while (humanCount < HUMAN_START_COUNT){
-        x = generateRandomNumber(0, GRID_SIZE - 1);
-        y = generateRandomNumber(0, GRID_SIZE - 1);
-        if (grid[x][y] != nullptr) continue;
-        grid[x][y] = new Human(this, x, y);
-        humanCount++;
+    // Create and place initial zombies
+    for (int i = 0; i < ZOMBIE_START_COUNT; ++i) {
+        int x = rand() % (GRID_SIZE / 2);  // Random x coordinate within half of the grid width
+        int y = rand() % (GRID_SIZE / 2); // Random y coordinate within half of the grid height
+
+        // Distribute zombies in each quadrant
+        x += (i % 2) * (GRID_SIZE / 2);    // Shift x coordinate for alternating quadrants
+        y += (i / (ZOMBIE_START_COUNT / 2)) * (GRID_SIZE / 2); // Shift y coordinate for each quadrant
+
+        // Check if the chosen cell is empty before placing a zombie
+        if (grid[x][y] == nullptr) {
+            grid[x][y] = new Zombie(this, x, y);
+        } else {
+            --i;
+        }
     }
 }
 
 void City::takeTimeStep(){
     timeStepCount++;
 
-    // move zombies
     for (int x = 0; x < GRID_SIZE; x++){
         for (int y = 0; y < GRID_SIZE; y++){
-            if (grid[x][y] == nullptr) continue;
-            if (grid[x][y]->getType() == ZOMBIE_CH)
-                grid[x][y]->move();
-        }
-    }
-
-    // move humans
-    for (int x = 0; x < GRID_SIZE; x++){
-        for (int y = 0; y < GRID_SIZE; y++){
-            if (grid[x][y] == nullptr) continue;
-            if (grid[x][y]->getType() == HUMAN_CH)
-                grid[x][y]->move();
+            if (grid[x][y] != nullptr) {
+                grid[x][y]->turn();
+            }
         }
     }
 
     for (int x = 0; x < GRID_SIZE; x++){
         for (int y = 0; y < GRID_SIZE; y++){
-            if (grid[x][y] == nullptr) continue;
-            grid[x][y]->breed();
-        }
-    }
-
-    for (int x = 0; x < GRID_SIZE; x++){
-        for (int y = 0; y < GRID_SIZE; y++){
-            if (grid[x][y] == nullptr) continue;
-            if (grid[x][y]->starves()){
+            if (grid[x][y] != nullptr && grid[x][y]->starves()) {
                 delete grid[x][y];
-                grid[x][y] = nullptr;
-            }
-        }
-    }
-}
-
-bool City::hasDiversity() {
-    bool hasHumans = false;
-    bool hasZombies = false;
-
-    for (int i = 0; i < GRID_SIZE; ++i) {
-        for (int j = 0; j < GRID_SIZE; ++j) {
-            if (grid[i][j] != nullptr) {
-                // Check if the organism is a Human
-                if (grid[i][j]->getType() == HUMAN_CH) {
-                    hasHumans = true;
-                }
-                    // Check if the organism is a Zombie
-                else if (grid[i][j]->getType() == ZOMBIE_CH) {
-                    hasZombies = true;
-                }
+                grid[x][y] = new Human(this, x, y); // if starves add a human in this place
             }
         }
     }
 
-    // Return true if both humans and zombies exist
-    return hasHumans && hasZombies;
+    // Reset moved flag for the next time step
+    for (int x = 0; x < GRID_SIZE; x++) {
+        for (int y = 0; y < GRID_SIZE; y++) {
+            if (grid[x][y] != nullptr) {
+                grid[x][y]->setMoved(false);
+            }
+        }
+    }
 }
-
 int City::getGeneration() {
     return timeStepCount;
 }
@@ -146,4 +125,3 @@ std::ostream& operator<<(std::ostream& output, const City& city) {
 
     return output;
 }
-

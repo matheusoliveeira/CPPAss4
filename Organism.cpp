@@ -1,4 +1,3 @@
-// Organism.cpp
 #include "Organism.h"
 #include "Human.h"
 #include "GameSpecs.h"
@@ -24,10 +23,16 @@ bool Organism::isValidCoordinate(int x, int y) const {
 }
 
 void Organism::getCoordinate(int& x, int& y, int move) const {
-    if (move == LEFT) x--;
-    if (move == RIGHT) x++;
-    if (move == DOWN) y--;
-    if (move == UP) y++;
+    switch (move) {
+        case LEFT: x--; break;
+        case RIGHT: x++; break;
+        case DOWN: y--; break;
+        case UP: y++; break;
+        case UP_LEFT: y++; x--; break;
+        case UP_RIGHT: y++; x++; break;
+        case DOWN_LEFT: y--; x--; break;
+        case DOWN_RIGHT: y--; x++; break;
+    }
 }
 
 Organism::Organism(City* city, int x, int y){
@@ -38,27 +43,4 @@ Organism::Organism(City* city, int x, int y){
     timeStepCount = city->timeStepCount;
 }
 
-void Organism::move() {
-    if (timeStepCount == city->timeStepCount) return;
-    timeStepCount++;
-    timeTillBreed--;
-
-    // Generate a random move in the allowed range (up, down, left, or right)
-    int randomMove = city->generateRandomNumber(LEFT, DOWN);
-    while (randomMove % 2 == 0) {
-        // If the randomly generated move is diagonal, regenerate until it's not
-        randomMove = city->generateRandomNumber(LEFT, DOWN);
-    }
-
-    int newX = x;
-    int newY = y;
-    getCoordinate(newX, newY, randomMove);
-
-    if (isValidCoordinate(newX, newY) && city->grid[newX][newY] == nullptr) {
-        // If the new position is valid and empty, move the organism
-        city->grid[x][y] = nullptr;
-        city->grid[newX][newY] = this;
-        x = newX;
-        y = newY;
-    }
-}
+void Organism::turn() {}
